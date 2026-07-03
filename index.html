@@ -848,6 +848,78 @@
 
         // Iniciar la aplicación al completarse la carga
         window.onload = initTracker;
+        // ========================================================
+// NUEVAS FUNCIONES (MODO OSCURO Y GUARDADO AUTOMÁTICO)
+// ========================================================
+
+// Ejecutar funciones al cargar la página
+document.addEventListener('DOMContentLoaded', () => {
+    inicializarModoOscuro();
+    cargarNotasGuardadas();
+});
+
+// Guardar en la memoria del navegador automáticamente
+function guardarNotas() {
+    const estadoNotas = {};
+    pensumData.forEach(materia => {
+        const selectElement = document.getElementById(`select-${materia.clave}`);
+        if (selectElement) {
+            estadoNotas[materia.clave] = selectElement.value;
+        }
+    });
+    localStorage.setItem('notas_simulador_unicaribe', JSON.stringify(estadoNotas));
+}
+
+// Cargar las notas guardadas al abrir la web
+function cargarNotasGuardadas() {
+    const notasGuardadas = localStorage.getItem('notas_simulador_unicaribe');
+    if (notasGuardadas) {
+        const estadoNotas = JSON.parse(notasGuardadas);
+        Object.keys(estadoNotas).forEach(clave => {
+            const selectElement = document.getElementById(`select-${clave}`);
+            if (selectElement) {
+                selectElement.value = estadoNotas[clave];
+            }
+        });
+        if (typeof calcularIndiceAcademico === "function") {
+            calcularIndiceAcademico();
+        }
+    }
+}
+
+// Activar/Desactivar modo oscuro con el botón
+function inicializarModoOscuro() {
+    const botonModo = document.getElementById('btn-dark-mode');
+    const modoGuardado = localStorage.getItem('tema_simulador');
+    
+    if (modoGuardado === 'dark') {
+        document.documentElement.classList.add('dark');
+        if(botonModo) botonModo.innerHTML = '☀️ Modo Claro';
+    } else {
+        document.documentElement.classList.remove('dark');
+        if(botonModo) botonModo.innerHTML = '🌙 Modo Oscuro';
+    }
+
+    if (botonModo) {
+        botonModo.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            if (document.documentElement.classList.contains('dark')) {
+                botonModo.innerHTML = '☀️ Modo Claro';
+                localStorage.setItem('tema_simulador', 'dark');
+            } else {
+                botonModo.innerHTML = '🌙 Modo Oscuro';
+                localStorage.setItem('tema_simulador', 'light');
+            }
+        });
+    }
+}
+
+// Conectar el guardado automático cuando cambien las notas
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.id.startsWith('select-')) {
+        guardarNotas();
+    }
+});
     </script>
 </body>
 </html>
