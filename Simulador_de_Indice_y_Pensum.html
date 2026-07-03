@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Índice y Pensum - UNICARIBE</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        unicaribe: {
+                            blue: '#002D72',      // Azul oficial UNICARIBE
+                            yellow: '#FFC72C',    // Amarillo institucional
+                            lightBlue: '#E6EFFD',
+                            darkBlue: '#001A4E'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & FontAwesome for icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Confetti Library for celebrating milestones -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Encabezado Principal -->
+    <header class="bg-unicaribe-blue text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-unicaribe-yellow text-unicaribe-blue p-2.5 rounded-xl font-black text-lg shadow-inner">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight">Simulador de Índice & Pensum</h1>
+                    <p class="text-xs text-blue-200">Ingeniería de Software • UNICARIBE</p>
+                </div>
+            </div>
+            
+            <!-- Acciones de Datos -->
+            <div class="flex gap-2 w-full sm:w-auto justify-end">
+                <button onclick="exportData()" class="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-2 border border-white/10">
+                    <i class="fa-solid fa-download"></i> <span class="hidden md:inline">Respaldar</span>
+                </button>
+                <button onclick="triggerImport()" class="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-2 border border-white/10">
+                    <i class="fa-solid fa-upload"></i> <span class="hidden md:inline">Cargar</span>
+                </button>
+                <button onclick="resetData()" class="bg-red-500/20 hover:bg-red-500/35 text-red-200 text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-2 border border-red-500/30">
+                    <i class="fa-solid fa-trash-can"></i> <span class="hidden md:inline">Limpiar</span>
+                </button>
+                <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- Panel de Métricas Dinámicas -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- Tarjeta de Índice Oficial -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Índice Académico</p>
+                        <span class="bg-blue-50 text-unicaribe-blue text-[10px] font-bold px-2 py-0.5 rounded-full">Oficial (4.0)</span>
+                    </div>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <h3 class="text-3xl font-extrabold text-unicaribe-blue" id="gpa-score">0.00</h3>
+                        <span class="text-xs text-slate-400" id="gpa-literal">Sin índice</span>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500">
+                    <span>Promedio General: <strong id="average-score" class="text-slate-700">0.0%</strong></span>
+                    <i class="fa-solid fa-chart-line text-blue-500"></i>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Créditos y Avance -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Créditos Aprobados</p>
+                        <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full" id="stat-pct">0%</span>
+                    </div>
+                    <div class="flex items-baseline gap-1 mt-2">
+                        <h3 class="text-3xl font-extrabold text-slate-800" id="stat-credits">0</h3>
+                        <span class="text-sm font-semibold text-slate-400">/ 191</span>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-slate-100">
+                    <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div id="stat-progress-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Materias Restantes -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Asignaturas Tomadas</p>
+                        <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full" id="stat-taken-count">0 / 53</span>
+                    </div>
+                    <div class="flex items-baseline gap-1 mt-2">
+                        <h3 class="text-3xl font-extrabold text-slate-800" id="stat-pending">53</h3>
+                        <span class="text-xs text-slate-400 font-medium">Restantes por cursar</span>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500">
+                    <span>Cursando ahora: <strong id="stat-active" class="text-amber-600">0</strong></span>
+                    <i class="fa-solid fa-clock-rotate-left text-amber-500"></i>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Ruta Profesional JavaScript -->
+            <div class="bg-gradient-to-br from-slate-900 via-unicaribe-blue to-unicaribe-darkBlue text-white p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-wider">Ruta JavaScript (Web)</p>
+                        <span class="bg-unicaribe-yellow text-unicaribe-blue text-[10px] font-black px-2 py-0.5 rounded">HOT</span>
+                    </div>
+                    <div class="flex items-baseline gap-1 mt-2">
+                        <h3 class="text-3xl font-black text-unicaribe-yellow" id="stat-js-pct">0%</h3>
+                        <span class="text-xs text-blue-200">completado</span>
+                    </div>
+                </div>
+                <p class="text-[10px] text-blue-100 mt-2 italic">Optimiza tus notas en materias de desarrollo.</p>
+            </div>
+        </section>
+
+        <!-- Controles Interactivos y Buscador -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="relative w-full sm:w-80">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="search-input" oninput="searchSubject()" placeholder="Buscar clave o asignatura..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-unicaribe-blue/20 focus:border-unicaribe-blue transition">
+                </div>
+                <div class="hidden sm:flex gap-1.5 text-xs font-semibold text-slate-500 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                    <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded border border-emerald-100"><i class="fa-solid fa-circle-check"></i> Aprobado (70-100)</span>
+                    <span class="px-2 py-1 bg-amber-50 text-amber-700 rounded border border-amber-100"><i class="fa-solid fa-spinner"></i> Cursando</span>
+                </div>
+            </div>
+            
+            <div class="text-xs text-slate-500 text-center md:text-right">
+                <i class="fa-solid fa-info-circle text-unicaribe-blue"></i> Introduce la calificación numérica directa (0-100). El sistema convertirá el literal y el estado al instante.
+            </div>
+        </div>
+
+        <!-- Estructura de la Hoja de Cálculo del Pensum -->
+        <div class="bg-white rounded-2xl border border-slate-150 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-unicaribe-blue text-white text-xs font-semibold tracking-wider">
+                            <th class="py-3 px-4 w-16 text-center">Clave</th>
+                            <th class="py-3 px-4 min-w-[280px]">Asignatura</th>
+                            <th class="py-3 px-4 w-12 text-center">CR</th>
+                            <th class="py-3 px-4 w-24 text-center">Prerrequisito</th>
+                            <th class="py-3 px-4 w-28 text-center">Nota (0-100)</th>
+                            <th class="py-3 px-4 w-16 text-center">Literal</th>
+                            <th class="py-3 px-4 w-16 text-center">Puntos</th>
+                            <th class="py-3 px-4 w-28 text-center">Estado</th>
+                            <th class="py-3 px-4 w-12"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-100">
+                        <!-- Las filas de los 12 cuatrimestres se inyectarán de forma dinámica -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 text-xs py-6 mt-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <p class="font-semibold text-slate-300">Rastreador de Rendimiento Académico UNICARIBE</p>
+                <p class="text-[11px] text-slate-500 mt-1">Escala de Honor: A (90-100) = 4 | B (80-89) = 3 | C (70-79) = 2 | F (0-69) = 0</p>
+            </div>
+            <div class="text-[11px] text-slate-500">
+                Optimizado para estudiantes de Ingeniería de Software. Hecho con <i class="fa-solid fa-heart text-red-500"></i> para tu carrera.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal de Recomendación de JavaScript -->
+    <div id="js-info-modal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative">
+            <button onclick="closeJSModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-unicaribe-yellow text-unicaribe-blue flex items-center justify-center font-black text-xl">JS</div>
+                <div>
+                    <h4 class="font-extrabold text-slate-900 text-lg">Asignatura Clave de Desarrollo</h4>
+                    <p class="text-slate-500 text-xs">Aplica JavaScript y acelera tu portafolio</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-600 mb-4 leading-relaxed" id="js-modal-body">
+                Cargando sugerencia...
+            </p>
+            <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <p class="text-xs text-unicaribe-blue font-bold uppercase tracking-wider mb-1"><i class="fa-solid fa-lightbulb"></i> Consejo Profesional:</p>
+                <p class="text-xs text-slate-700 leading-relaxed" id="js-modal-tip">
+                    Sustituye la estructura básica por proyectos estructurados en JavaScript moderno para destacar en tu clase.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Listado exacto de las 53 asignaturas y 191 créditos de UNICARIBE basados en las imágenes provistas
+        const pensumData = [
+            // 1er Cuatrimestre
+            { clave: 'FGC-101', nombre: 'ORIENTACIÓN ACADÉMICA INSTITUCIONAL', cr: 2, prereq: '-', cuat: 1, defaultGrade: 85 },
+            { clave: 'FGC-102', nombre: 'MÉTODO DEL TRABAJO ACADÉMICO', cr: 2, prereq: '-', cuat: 1, defaultGrade: 90 },
+            { clave: 'FGC-103', nombre: 'METODOLOGÍA DE LA INVESTIGACIÓN', cr: 3, prereq: '-', cuat: 1, defaultGrade: 97 },
+            { clave: 'ADE-101', nombre: 'ADMINISTRACION I', cr: 3, prereq: '-', cuat: 1, defaultGrade: 93 },
+            
+            // 2do Cuatrimestre
+            { clave: 'FGC-104', nombre: 'LENGUA ESPAÑOLA I', cr: 3, prereq: 'FGC-102', cuat: 2, defaultGrade: 97 },
+            { clave: 'FGC-105', nombre: 'MATEMÁTICA BÁSICA I', cr: 3, prereq: 'FGC-102', cuat: 2, defaultGrade: 94 },
+            { clave: 'FGC-106', nombre: 'TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN I', cr: 3, prereq: 'FGC-102', cuat: 2, defaultGrade: 100 },
+            { clave: 'ING-101', nombre: 'INTRODUCCIÓN A LA INGENIERÍA', cr: 3, prereq: '-', cuat: 2, defaultGrade: 90 },
+            
+            // 3er Cuatrimestre
+            { clave: 'FGC-107', nombre: 'HISTORIA SOCIAL DOMINICANA', cr: 3, prereq: 'FGC-102', cuat: 3, defaultGrade: 94 },
+            { clave: 'FGC-108', nombre: 'INGLÉS I', cr: 3, prereq: 'FGC-102', cuat: 3, defaultGrade: 96 },
+            { clave: 'DMF-209', nombre: 'FISICA I', cr: 4, prereq: 'FGC-105', cuat: 3, defaultGrade: 93 },
+            { 
+                clave: 'INF-221', 
+                nombre: 'INTRODUCCIÓN A LA PROGRAMACIÓN', 
+                cr: 3, 
+                prereq: 'FGC-106', 
+                cuat: 3, 
+                isWeb: true, 
+                jsTip: "Aquí comienza tu camino con JavaScript. En lugar de limitarte a pseudocódigo, crea pequeños scripts funcionales en JS y ejecútalos directo en la consola de tu navegador o con Node.js.",
+                defaultGrade: 100 
+            },
+            { clave: 'MTI-200', nombre: 'MATEMÁTICA II', cr: 4, prereq: 'FGC-105', cuat: 3, defaultGrade: 96 },
+            
+            // 4to Cuatrimestre
+            { clave: 'FGC-109', nombre: 'FILOSOFÍA', cr: 2, prereq: 'FGC-102', cuat: 4, defaultGrade: 90 },
+            { clave: 'FGC-110', nombre: 'DESARROLLO SOSTENIBLE Y GESTIÓN DE RIESGOS', cr: 2, prereq: 'FGC-102', cuat: 4, defaultGrade: 88 },
+            { clave: 'FGC-112', nombre: 'EDUCACIÓN CONSTITUCIONAL', cr: 3, prereq: '-', cuat: 4, defaultGrade: 0 },
+            { clave: 'MTI-300', nombre: 'MATEMÁTICA III', cr: 4, prereq: 'MTI-200', cuat: 4, defaultGrade: 87 },
+            { clave: 'DMF-210', fontNote: 'vectorial', nombre: 'FISICA II', cr: 4, prereq: 'DMF-209', cuat: 4, defaultGrade: 87 },
+            
+            // 5to Cuatrimestre
+            { clave: 'MAT-241', nombre: 'ESTADISTICA I', cr: 3, prereq: 'FGC-105', cuat: 5, defaultGrade: 92, active: true },
+            { clave: 'QUI-400', nombre: 'QUÍMICA I', cr: 3, prereq: 'FGC-105', cuat: 5, defaultGrade: 0, active: true },
+            { clave: 'INF-215', nombre: 'INGENIERÍA ECONÓMICA', cr: 3, prereq: 'MTI-200', cuat: 5, defaultGrade: 94, active: true },
+            { clave: 'ING-103', nombre: 'CALCULO INTEGRAL', cr: 4, prereq: 'MTI-300', cuat: 5, defaultGrade: 90, active: true },
+            { clave: 'FGC-116', nombre: 'HISTORIA DEL ARTE', cr: 3, prereq: 'FGC-102', cuat: 5, defaultGrade: 0, active: true },
+            
+            // 6to Cuatrimestre
+            { clave: 'MAT-242', nombre: 'ESTADISTICA II', cr: 3, prereq: 'MAT-241', cuat: 6, defaultGrade: 0 },
+            { clave: 'ING-105', nombre: 'TALLER DE MECÁNICA DE HARDWARE', cr: 3, prereq: 'FGC-106', cuat: 6, defaultGrade: 0 },
+            { clave: 'ING-104', nombre: 'CÁLCULO VECTORIAL', cr: 4, prereq: 'ING-103', cuat: 6, defaultGrade: 92},
+            { clave: 'INF-222', nombre: 'SISTEMA OPERATIVO I', cr: 3, prereq: 'FGC-106', cuat: 6, defaultGrade: 0 },
+            { clave: 'ING-102', nombre: 'CIENCIA E INGENIERÍA DE MATERIALES', cr: 4, prereq: 'QUI-400', cuat: 6, defaultGrade: 0 },
+            
+            // 7mo Cuatrimestre
+            { clave: 'TIC-408', nombre: 'SEGURIDAD DE LA INFORMACIÓN', cr: 3, prereq: 'FGC-106', cuat: 7, defaultGrade: 94 },
+            { 
+                clave: 'ISW-301', 
+                nombre: 'TALLER DE PROGRAMACIÓN I', 
+                cr: 5, 
+                prereq: 'INF-221', 
+                cuat: 7, 
+                isWeb: true, 
+                jsTip: "El primer taller de programación pesada de tu carrera. Domina los paradigmas de objetos y funciones de JavaScript (ES6+). Este taller te dará una base sólida para crear lógica de negocios limpia.",
+                defaultGrade: 0 
+            },
+            { clave: 'INF-437', nombre: 'REDES INFORMATICAS', cr: 3, prereq: 'INF-222', cuat: 7, defaultGrade: 0 },
+            { clave: 'ISW-311', nombre: 'ANÁLISIS Y DISEÑO DE SISTEMAS', cr: 4, prereq: 'INF-221', cuat: 7, defaultGrade: 0 },
+            
+            // 8vo Cuatrimestre
+            { 
+                clave: 'ISW-221', 
+                nombre: 'ESTRUCTURA DE DATOS', 
+                cr: 4, 
+                prereq: 'ISW-301', 
+                cuat: 8, 
+                isWeb: true, 
+                jsTip: "Utilizar arreglos, colas, pilas y árboles dinámicos directamente en JavaScript te dará una ventaja tremenda. Te servirá para comprender cómo gestionar el estado interno en apps modernas sin frameworks.",
+                defaultGrade: 0 
+            },
+            { clave: 'TIC-402', nombre: 'ETICA EN TECNOLOGÍA', cr: 2, prereq: 'FGC-110', cuat: 8, defaultGrade: 0 },
+            { clave: 'ISW-404', nombre: 'ELECTIVA I', cr: 3, prereq: '7MO. CUAT.', cuat: 8, defaultGrade: 0 },
+            { clave: 'ISW-321', nombre: 'TALLER DE BASES DE DATOS I', cr: 4, prereq: 'ISW-311', cuat: 8, defaultGrade: 0 },
+            
+            // 9no Cuatrimestre
+            { 
+                clave: 'ISW-302', 
+                nombre: 'TALLER DE PROGRAMACIÓN II', 
+                cr: 5, 
+                prereq: 'ISW-301', 
+                cuat: 9, 
+                isWeb: true, 
+                jsTip: "¡Es hora del Backend! Aprende a configurar servidores web, APIs robustas y endpoints con Node.js, Express y bases de datos. Todo usando el mismo lenguaje.",
+                defaultGrade: 0 
+            },
+            { clave: 'ISW-312', nombre: 'INGENIERÍA DE SOFTWARE I', cr: 4, prereq: 'ISW-301', cuat: 9, defaultGrade: 0 },
+            { clave: 'ISW-314', nombre: 'INGENIERÍA DE REQUISITOS Y MODELADO', cr: 4, prereq: 'ISW-311', cuat: 9, defaultGrade: 0 },
+            { clave: 'ISW-322', nombre: 'TALLER DE BASES DE DATOS II', cr: 4, prereq: 'ISW-321', cuat: 9, defaultGrade: 0 },
+            { clave: 'ISW-324', nombre: 'SISTEMAS DE INFORMACIÓN GEOGRÁFICA', cr: 3, prereq: 'ISW-321', cuat: 9, defaultGrade: 0 },
+            
+            // 10mo Cuatrimestre
+            { clave: 'ISW-313', nombre: 'INGENIERÍA DE SOFTWARE II', cr: 4, prereq: 'ISW-312', cuat: 10, defaultGrade: 0 },
+            { 
+                clave: 'ISW-303', 
+                nombre: 'TALLER DE PROGRAMACIÓN III', 
+                cr: 5, 
+                prereq: 'ISW-302', 
+                cuat: 10, 
+                isWeb: true, 
+                jsTip: "Aquí puedes dar el salto a arquitecturas en tiempo real con WebSockets, colas de mensajería y microservicios robustos en el ecosistema Node.js.",
+                defaultGrade: 0 
+            },
+            { clave: 'ISW-405', nombre: 'ELECTIVA II', cr: 3, prereq: '9NO. CUAT.', cuat: 10, defaultGrade: 0 },
+            { clave: 'ISW-401', nombre: 'PROYECTO DE SOFTWARE I', cr: 5, prereq: 'ISW-312', cuat: 10, defaultGrade: 0 },
+            { clave: 'ISW-403', nombre: 'PASANTÍA - PRÁCTICA DE INGENIERÍA DE SOFTWARE', cr: 8, prereq: 'ISW-302', cuat: 10, defaultGrade: 0 },
+            
+            // 11er Cuatrimestre
+            { 
+                clave: 'ISW-304', 
+                nombre: 'TALLER DE PROGRAMACIÓN IV', 
+                cr: 5, 
+                prereq: 'ISW-303', 
+                cuat: 11, 
+                isWeb: true, 
+                jsTip: "Consolida integraciones empresariales completas, manejo de seguridad OAuth, cifrado y despliegues automáticos (DevOps) de aplicaciones Full-Stack en JS.",
+                defaultGrade: 0 
+            },
+            { 
+                clave: 'ISW-305', 
+                nombre: 'DISEÑO Y CONSTRUCCIÓN DE INTERFACES', 
+                cr: 4, 
+                prereq: 'ISW-302', 
+                cuat: 11, 
+                isWeb: true, 
+                jsTip: "¡JavaScript puro y duro! Desarrollo Frontend avanzado, uso del DOM y frameworks líderes (React, Vue o Svelte) para diseñar interfaces dinámicas y profesionales.",
+                defaultGrade: 0 
+            },
+            { clave: 'ISW-402', nombre: 'PROYECTO DE SOFTWARE II', cr: 5, prereq: 'ISW-401', cuat: 11, defaultGrade: 0 },
+            { clave: 'FGC-111', nombre: 'SEMINARIO DE GRADO', cr: 3, prereq: 'FGC-103', cuat: 11, defaultGrade: 0 },
+            
+            // 12do Cuatrimestre
+            { clave: 'ISW-323', nombre: 'TALLER DE BASE DE DATOS III', cr: 4, prereq: 'ISW-322', cuat: 12, defaultGrade: 0 },
+            { clave: 'ISW-400', nombre: 'INTELIGENCIA ARTIFICIAL', cr: 4, prereq: 'ISW-303', cuat: 12, defaultGrade: 0 },
+            { 
+                clave: 'ISW-600', 
+                nombre: 'PROYECTO INTEGRADOR DE SOFTWARE: TRABAJO DE GRADO', 
+                cr: 6, 
+                prereq: 'TODAS', 
+                cuat: 12, 
+                isWeb: true, 
+                jsTip: "Tu tesis de grado. Desarrollar una aplicación web compleja (SaaS) con React, Node.js y bases de datos no relacionales demostrará tu dominio técnico integral ante el jurado.",
+                defaultGrade: 0 
+            }
+        ];
+
+        const cuatrimestresText = [
+            "Primer Cuatrimestre", "Segundo Cuatrimestre", "Tercer Cuatrimestre",
+            "Cuarto Cuatrimestre", "Quinto Cuatrimestre", "Sexto Cuatrimestre",
+            "Séptimo Cuatrimestre", "Octavo Cuatrimestre", "Noveno Cuatrimestre",
+            "Décimo Cuatrimestre", "Undécimo Cuatrimestre", "Duodécimo Cuatrimestre"
+        ];
+
+        let studentGrades = {};
+
+        function initTracker() {
+            loadSavedProgress();
+            renderSpreadsheet();
+            calculateAllMetrics();
+        }
+
+        // Cargar progreso del LocalStorage o predeterminar con el historial del usuario
+        function loadSavedProgress() {
+            const saved = localStorage.getItem('unicaribe_software_grades_tracker');
+            if (saved) {
+                try {
+                    studentGrades = JSON.parse(saved);
+                } catch(e) {
+                    studentGrades = {};
+                }
+            } else {
+                // Si es la primera vez, cargar con los datos aproximados que compartiste
+                pensumData.forEach(m => {
+                    studentGrades[m.clave] = {
+                        nota: m.defaultGrade > 0 ? m.defaultGrade : null,
+                        cursando: m.active || false
+                    };
+                });
+                saveToLocalStorage();
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('unicaribe_software_grades_tracker', JSON.stringify(studentGrades));
+        }
+
+        function calculateAllMetrics() {
+            let totalCreditsInCareer = 191;
+            let approvedCredits = 0;
+            let totalCreditsAttemptedWithGrades = 0;
+            let weightedSumHonorPoints = 0;
+            let directSumGrades = 0;
+            let subjectsWithGradesCount = 0;
+            let activeCount = 0;
+            let jsPathCompleted = 0;
+            let jsPathTotal = 0;
+
+            pensumData.forEach(m => {
+                const data = studentGrades[m.clave] || { nota: null, cursando: false };
+                if (m.isWeb) jsPathTotal++;
+
+                if (data.nota && data.nota >= 70) {
+                    approvedCredits += m.cr;
+                    if (m.isWeb) jsPathCompleted++;
+
+                    // Convertir nota de base 100 a puntos de honor de UNICARIBE:
+                    // A (90-100) = 4 puntos, B (80-89) = 3 puntos, C (70-79) = 2 puntos, F (0-69) = 0 puntos
+                    let hp = 0;
+                    if (data.nota >= 90) hp = 4;
+                    else if (data.nota >= 80) hp = 3;
+                    else if (data.nota >= 70) hp = 2;
+
+                    weightedSumHonorPoints += (hp * m.cr);
+                    totalCreditsAttemptedWithGrades += m.cr;
+                    
+                    directSumGrades += (Number(data.nota) * m.cr);
+                    subjectsWithGradesCount++;
+                } else if (data.cursando) {
+                    activeCount++;
+                } else if (data.nota && data.nota < 70) {
+                    // Reprobada, cuenta para el índice si se digitó
+                    totalCreditsAttemptedWithGrades += m.cr;
+                    subjectsWithGradesCount++;
+                }
+            });
+
+            // Cálculos Oficiales de Índices
+            let finalGpa = 0.00;
+            if (totalCreditsAttemptedWithGrades > 0) {
+                finalGpa = weightedSumHonorPoints / totalCreditsAttemptedWithGrades;
+            }
+
+            let finalAverage = 0.0;
+            if (totalCreditsAttemptedWithGrades > 0) {
+                finalAverage = directSumGrades / totalCreditsAttemptedWithGrades;
+            }
+
+            // Actualizar la interfaz
+            const gpaEl = document.getElementById('gpa-score');
+            gpaEl.innerText = finalGpa.toFixed(2);
+            
+            // Animación de color según el índice
+            if (finalGpa >= 3.8) {
+                gpaEl.className = "text-3xl font-extrabold text-amber-500 animate-pulse";
+            } else {
+                gpaEl.className = "text-3xl font-extrabold text-unicaribe-blue";
+            }
+
+            // Asignar clasificación de honor UNICARIBE
+            let literalText = "Sin índice";
+            if (finalGpa >= 3.8) literalText = "Suma Cum Laude 🏆";
+            else if (finalGpa >= 3.5) literalText = "Magna Cum Laude 🥈";
+            else if (finalGpa >= 3.2) literalText = "Cum Laude 🥉";
+            else if (finalGpa > 0) literalText = "Regular";
+            document.getElementById('gpa-literal').innerText = literalText;
+
+            document.getElementById('average-score').innerText = `${finalAverage.toFixed(1)}%`;
+            document.getElementById('stat-credits').innerText = approvedCredits;
+            
+            const pct = Math.round((approvedCredits / totalCreditsInCareer) * 100);
+            document.getElementById('stat-pct').innerText = `${pct}%`;
+            document.getElementById('stat-progress-bar').style.width = `${pct}%`;
+
+            let approvedSubjectsCount = pensumData.filter(m => {
+                const data = studentGrades[m.clave];
+                return data && data.nota >= 70;
+            }).length;
+
+            document.getElementById('stat-taken-count').innerText = `${approvedSubjectsCount} / 53`;
+            document.getElementById('stat-pending').innerText = `${53 - approvedSubjectsCount} materias`;
+            document.getElementById('stat-active').innerText = activeCount;
+
+            const jsPct = jsPathTotal > 0 ? Math.round((jsPathCompleted / jsPathTotal) * 100) : 0;
+            document.getElementById('stat-js-pct').innerText = `${jsPct}%`;
+        }
+
+        function renderSpreadsheet() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            let currentCuatrimestre = 0;
+
+            pensumData.forEach((m) => {
+                const data = studentGrades[m.clave] || { nota: null, cursando: false };
+
+                // Insertar encabezado de cuatrimestre si cambia
+                if (m.cuat !== currentCuatrimestre) {
+                    currentCuatrimestre = m.cuat;
+                    const headerRow = document.createElement('tr');
+                    headerRow.className = "bg-slate-100/80 font-bold text-slate-700 text-xs border-y border-slate-200";
+                    headerRow.innerHTML = `
+                        <td colspan="9" class="py-2.5 px-4">
+                            <span class="text-unicaribe-blue font-extrabold"><i class="fa-solid fa-calendar-week mr-1.5"></i>Cuatrimestre ${currentCuatrimestre}:</span> 
+                            <span class="text-slate-600 font-medium ml-1">${cuatrimestresText[currentCuatrimestre - 1]}</span>
+                        </td>
+                    `;
+                    tbody.appendChild(headerRow);
+                }
+
+                const literal = getLiteralAndPoints(data.nota).literal;
+                const points = getLiteralAndPoints(data.nota).points;
+                const statusInfo = getSubjectStatus(data.nota, data.cursando);
+
+                const row = document.createElement('tr');
+                row.id = `row-${m.clave}`;
+                row.className = `hover:bg-slate-50/50 transition-colors duration-150 ${statusInfo.bgClass}`;
+                
+                row.innerHTML = `
+                    <td class="py-3 px-4 text-center font-mono text-xs font-bold text-slate-400 select-all">${m.clave}</td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-xs text-slate-800">${m.nombre}</span>
+                            ${m.isWeb ? `
+                                <button onclick="openJSModal('${m.clave}')" class="bg-unicaribe-yellow hover:scale-110 text-unicaribe-blue font-black text-[9px] px-1 rounded transition-transform" title="Esta materia se complementa excelentemente con JavaScript">
+                                    JS
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-center text-xs font-bold text-slate-500">${m.cr}</td>
+                    <td class="py-3 px-4 text-center text-xs font-medium text-slate-400">${m.prereq}</td>
+                    
+                    <!-- Entrada de Calificación Numérica -->
+                    <td class="py-2 px-4 text-center">
+                        <input type="number" 
+                               value="${data.nota !== null && data.nota > 0 ? data.nota : ''}" 
+                               min="0" max="100" 
+                               placeholder="--" 
+                               oninput="updateGrade('${m.clave}', this.value)" 
+                               class="w-16 px-2 py-1 text-center text-xs font-bold border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-unicaribe-blue/30 focus:border-unicaribe-blue bg-white shadow-sm transition">
+                    </td>
+                    
+                    <!-- Literal Calculado de forma automática -->
+                    <td class="py-3 px-4 text-center text-xs font-black ${literal === 'A' ? 'text-emerald-600' : literal === 'B' ? 'text-blue-600' : literal === 'C' ? 'text-amber-600' : 'text-slate-400'}" id="literal-${m.clave}">
+                        ${literal}
+                    </td>
+                    
+                    <!-- Puntos de Honor Calculados -->
+                    <td class="py-3 px-4 text-center text-xs font-semibold text-slate-400" id="points-${m.clave}">
+                        ${points !== '-' ? points : '-'}
+                    </td>
+                    
+                    <!-- Estado de la materia -->
+                    <td class="py-2 px-4 text-center" id="status-container-${m.clave}">
+                        <div class="flex items-center justify-center gap-1.5">
+                            ${statusInfo.badgeHtml}
+                            ${!data.nota || data.nota < 70 ? `
+                                <button onclick="toggleCursando('${m.clave}')" class="text-[10px] text-slate-400 hover:text-amber-500 transition" title="Marcar como cursando actualmente">
+                                    <i class="fa-solid ${data.cursando ? 'fa-toggle-on text-amber-500 text-sm' : 'fa-toggle-off text-sm'}"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                    
+                    <!-- Acción para borrar nota de esta materia -->
+                    <td class="py-3 px-4 text-center">
+                        ${data.nota ? `
+                            <button onclick="clearRow('${m.clave}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        ` : ''}
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        function getLiteralAndPoints(nota) {
+            if (nota === null || nota === '' || nota === 0) {
+                return { literal: '-', points: '-' };
+            }
+            let val = Number(nota);
+            if (val >= 90 && val <= 100) return { literal: 'A', points: '4' };
+            if (val >= 80 && val < 90) return { literal: 'B', points: '3' };
+            if (val >= 70 && val < 80) return { literal: 'C', points: '2' };
+            if (val > 0 && val < 70) return { literal: 'F', points: '0' };
+            return { literal: '-', points: '-' };
+        }
+
+        function getSubjectStatus(nota, cursando) {
+            if (nota && nota >= 70) {
+                return {
+                    bgClass: 'bg-emerald-50/10',
+                    badgeHtml: `<span class="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check"></i> Aprobada
+                    </span>`
+                };
+            }
+            if (cursando) {
+                return {
+                    bgClass: 'bg-amber-50/10',
+                    badgeHtml: `<span class="bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <i class="fa-solid fa-spinner animate-spin"></i> Cursando
+                    </span>`
+                };
+            }
+            return {
+                bgClass: '',
+                badgeHtml: `<span class="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-medium px-2 py-0.5 rounded-full">
+                    Pendiente
+                </span>`
+            };
+        }
+
+        function updateGrade(clave, value) {
+            let numVal = value === '' ? null : Number(value);
+            
+            // Restringir entrada lógica
+            if (numVal !== null) {
+                if (numVal > 100) numVal = 100;
+                if (numVal < 0) numVal = 0;
+            }
+
+            // Inicializar objeto de estado si no existe
+            if (!studentGrades[clave]) {
+                studentGrades[clave] = { nota: null, cursando: false };
+            }
+
+            const previousScore = studentGrades[clave].nota;
+            studentGrades[clave].nota = numVal;
+
+            // Si se ingresó nota aprobatoria, quitar bandera "cursando" automáticamente
+            if (numVal && numVal >= 70) {
+                studentGrades[clave].cursando = false;
+            }
+
+            saveToLocalStorage();
+            calculateAllMetrics();
+
+            // Actualizar la celda de Literal y Puntos instantáneamente para que se sienta reactivo
+            const litObj = getLiteralAndPoints(numVal);
+            const literalEl = document.getElementById(`literal-${clave}`);
+            const pointsEl = document.getElementById(`points-${clave}`);
+            
+            if (literalEl && pointsEl) {
+                literalEl.innerText = litObj.literal;
+                literalEl.className = `py-3 px-4 text-center text-xs font-black ${litObj.literal === 'A' ? 'text-emerald-600' : litObj.literal === 'B' ? 'text-blue-600' : litObj.literal === 'C' ? 'text-amber-600' : 'text-slate-400'}`;
+                pointsEl.innerText = litObj.points;
+            }
+
+            // Actualizar clase de fondo de la fila entera
+            const row = document.getElementById(`row-${clave}`);
+            const statusContainer = document.getElementById(`status-container-${clave}`);
+            if (row && statusContainer) {
+                const statusInfo = getSubjectStatus(numVal, studentGrades[clave].cursando);
+                row.className = `hover:bg-slate-50/50 transition-colors duration-150 ${statusInfo.bgClass}`;
+                statusContainer.innerHTML = `
+                    <div class="flex items-center justify-center gap-1.5">
+                        ${statusInfo.badgeHtml}
+                        ${!numVal || numVal < 70 ? `
+                            <button onclick="toggleCursando('${clave}')" class="text-[10px] text-slate-400 hover:text-amber-500 transition">
+                                <i class="fa-solid ${studentGrades[clave].cursando ? 'fa-toggle-on text-amber-500 text-sm' : 'fa-toggle-off text-sm'}"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            // ¡Celebrar un hito! Si sacó un 100 y no lo tenía antes, lanzar confeti
+            if (numVal === 100 && previousScore !== 100) {
+                triggerMilestoneConfetti();
+            }
+        }
+
+        function toggleCursando(clave) {
+            if (!studentGrades[clave]) {
+                studentGrades[clave] = { nota: null, cursando: false };
+            }
+
+            // No se puede cursar si ya está aprobada
+            if (studentGrades[clave].nota && studentGrades[clave].nota >= 70) return;
+
+            studentGrades[clave].cursando = !studentGrades[clave].cursando;
+            saveToLocalStorage();
+            calculateAllMetrics();
+            
+            // Refrescar fila específica
+            const row = document.getElementById(`row-${clave}`);
+            const statusContainer = document.getElementById(`status-container-${clave}`);
+            if (row && statusContainer) {
+                const statusInfo = getSubjectStatus(studentGrades[clave].nota, studentGrades[clave].cursando);
+                row.className = `hover:bg-slate-50/50 transition-colors duration-150 ${statusInfo.bgClass}`;
+                statusContainer.innerHTML = `
+                    <div class="flex items-center justify-center gap-1.5">
+                        ${statusInfo.badgeHtml}
+                        <button onclick="toggleCursando('${clave}')" class="text-[10px] text-slate-400 hover:text-amber-500 transition">
+                            <i class="fa-solid ${studentGrades[clave].cursando ? 'fa-toggle-on text-amber-500 text-sm' : 'fa-toggle-off text-sm'}"></i>
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function clearRow(clave) {
+            if (studentGrades[clave]) {
+                studentGrades[clave].nota = null;
+                studentGrades[clave].cursando = false;
+                saveToLocalStorage();
+                renderSpreadsheet();
+                calculateAllMetrics();
+            }
+        }
+
+        function searchSubject() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            
+            pensumData.forEach(m => {
+                const row = document.getElementById(`row-${m.clave}`);
+                if (!row) return;
+
+                if (query === '') {
+                    row.style.display = '';
+                    return;
+                }
+
+                const matchesClave = m.clave.toLowerCase().includes(query);
+                const matchesNombre = m.nombre.toLowerCase().includes(query);
+
+                if (matchesClave || matchesNombre) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function triggerMilestoneConfetti() {
+            confetti({
+                particleCount: 120,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#002D72', '#FFC72C', '#4ade80', '#60a5fa']
+            });
+        }
+
+        // Modal de tips de JavaScript para estudiantes de Software
+        function openJSModal(clave) {
+            const subj = pensumData.find(m => m.clave === clave);
+            if (!subj) return;
+
+            document.getElementById('js-modal-body').innerText = subj.jsTip || "Excelente oportunidad para estructurar módulos limpios utilizando JavaScript.";
+            document.getElementById('js-modal-tip').innerText = `En UNICARIBE, estructurar tu proyecto con Node.js o una SPA interactiva en JavaScript potenciará tu perfil laboral al egresar.`;
+            document.getElementById('js-info-modal').classList.remove('hidden');
+        }
+
+        function closeJSModal() {
+            document.getElementById('js-info-modal').classList.add('hidden');
+        }
+
+        // Funciones para importar y exportar tus calificaciones y respaldar progreso
+        function exportData() {
+            const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(studentGrades));
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", str);
+            anchor.setAttribute("download", "pensum_unicaribe_progreso_oficial.json");
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+        }
+
+        function triggerImport() {
+            document.getElementById('import-file').click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && typeof parsed === 'object') {
+                        studentGrades = parsed;
+                        saveToLocalStorage();
+                        initTracker();
+                        triggerMilestoneConfetti();
+                    }
+                } catch (err) {
+                    // Modal o feedback discreto
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetData() {
+            if (confirm("¿Estás seguro de que deseas vaciar todas las calificaciones guardadas?")) {
+                localStorage.removeItem('unicaribe_software_grades_tracker');
+                studentGrades = {};
+                initTracker();
+            }
+        }
+
+        // Escuchar clics fuera del modal para cerrarlo de forma limpia
+        window.onclick = function(e) {
+            const modal = document.getElementById('js-info-modal');
+            if (e.target === modal) {
+                closeJSModal();
+            }
+        }
+
+        // Iniciar la aplicación al completarse la carga
+        window.onload = initTracker;
+    </script>
+</body>
+</html>
