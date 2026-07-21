@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -32,6 +33,15 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+        html.dark body { background: #0f172a; color: #e2e8f0; }
+        html.dark .bg-white { background-color: #1e293b !important; }
+        html.dark .bg-slate-50, html.dark .bg-slate-100, html.dark .bg-slate-100\/80 { background-color: #0f172a !important; }
+        html.dark .text-slate-800, html.dark .text-slate-700, html.dark .text-slate-600 { color: #e2e8f0 !important; }
+        html.dark .text-slate-500, html.dark .text-slate-400 { color: #94a3b8 !important; }
+        html.dark .border-slate-100, html.dark .border-slate-150, html.dark .border-slate-200 { border-color: #334155 !important; }
+        html.dark input { background-color: #0f172a !important; color: #f8fafc !important; border-color: #475569 !important; }
+        #selector-carrera option { background: #ffffff; color: #0f172a; }
+        html.dark #selector-carrera option { background: #1e293b; color: #f8fafc; }
         /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -884,6 +894,288 @@ function inicializarModoOscuro() {
         }
     });
 }
+    </script>
+    <script>
+        /* Catálogo multiprograma: pensums oficiales de la Escuela de Tecnología (2026). */
+        const materia = (clave, nombre, cr, prereq, cuat) => ({ clave, nombre, cr, prereq, cuat });
+        const leerPensum = (texto) => texto.trim().split('\n').map(linea => {
+            const [clave, nombre, cr, prereq, cuat] = linea.split('|');
+            return materia(clave, nombre, Number(cr), prereq, Number(cuat));
+        });
+
+        const troncoIngenieria = leerPensum(`
+FGC-101|ORIENTACIÓN ACADÉMICA INSTITUCIONAL|2|-|1
+FGC-102|MÉTODO DEL TRABAJO ACADÉMICO|2|-|1
+FGC-103|METODOLOGÍA DE LA INVESTIGACIÓN|3|-|1
+ADE-101|ADMINISTRACIÓN I|3|-|1
+FGC-104|LENGUA ESPAÑOLA I|3|FGC-102|2
+FGC-105|MATEMÁTICA BÁSICA I|3|FGC-102|2
+FGC-106|TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN I|3|FGC-102|2
+ING-101|INTRODUCCIÓN A LA INGENIERÍA|3|-|2
+FGC-107|HISTORIA SOCIAL DOMINICANA|3|FGC-102|3
+FGC-108|INGLÉS I|3|FGC-102|3
+DMF-209|FÍSICA I|4|FGC-105|3
+QUI-400|QUÍMICA I|3|FGC-105|3
+MTI-200|MATEMÁTICA II|4|FGC-105|3
+FGC-109|FILOSOFÍA|2|FGC-102|4
+FGC-110|DESARROLLO SOSTENIBLE Y GESTIÓN DE RIESGOS|2|FGC-102|4
+MTI-300|MATEMÁTICA III|4|MTI-200|4
+DMF-210|FÍSICA II|4|DMF-209|4
+FGC-112|EDUCACIÓN CONSTITUCIONAL|3|-|4
+MAT-241|ESTADÍSTICA I|3|FGC-105|5
+ING-102|CIENCIA E INGENIERÍA DE MATERIALES|4|QUI-400|5
+ING-103|CÁLCULO INTEGRAL|4|MTI-300|5
+INF-215|INGENIERÍA ECONÓMICA|3|MTI-200|5
+FGC-116|HISTORIA DEL ARTE|3|FGC-102|5
+MAT-242|ESTADÍSTICA II|3|MAT-241|6
+ING-105|TALLER DE MECÁNICA DE HARDWARE|3|FGC-106|6
+ING-104|CÁLCULO VECTORIAL|4|ING-103|6
+INF-222|SISTEMA OPERATIVO I|3|FGC-106|6
+INF-221|INTRODUCCIÓN A LA PROGRAMACIÓN|3|FGC-106|6`);
+
+        const programasTecnologia = {
+            software: { nombre: 'Ingeniería de Software', creditos: 191, materias: pensumData },
+            datos: { nombre: 'Ingeniería de Datos e Inteligencia Organizacional', creditos: 191, materias: troncoIngenieria.concat(leerPensum(`
+TIC-408|SEGURIDAD DE LA INFORMACIÓN|3|FGC-106|7
+IND-101|CIENCIA DE LOS DATOS|3|-|7
+INF-437|REDES INFORMÁTICAS|3|FGC-106|7
+ISW-301|TALLER DE PROGRAMACIÓN I|5|INF-221|7
+ISW-321|TALLER DE BASES DE DATOS I|4|INF-221|8
+TIC-402|ÉTICA EN TECNOLOGÍA|2|FGC-110|8
+IND-404|ELECTIVA I|3|7MO. CUAT.|8
+IND-314|TEORÍA DE LA INFORMACIÓN|3|IND-101|8
+IND-324|SEÑALES Y SISTEMAS|3|IND-314|9
+IND-325|BÚSQUEDA Y ANÁLISIS DE LA INFORMACIÓN|3|IND-314|9
+IND-332|HERRAMIENTAS DE ANÁLISIS DE DATOS I|4|IND-101|9
+IND-334|ESTADÍSTICA APLICADA A LA CIENCIA DE DATOS|3|MAT-242|9
+IND-335|INGENIERÍA DE DATOS I|4|IND-314|9
+IND-333|TRATAMIENTO DE AUDIO, VIDEO Y VISIÓN ARTIFICIAL|4|IND-324|10
+IND-412|HERRAMIENTAS DE ANÁLISIS DE DATOS II|4|IND-332|10
+IND-405|ELECTIVA II|3|9NO. CUAT.|10
+IND-401|PROYECTO DE DATOS E IO I|5|IND-335|10
+IND-403|PASANTÍA - PRÁCTICA DE INGENIERÍA DE DATOS E IO|8|IND-335|10
+IND-413|INGENIERÍA DE DATOS II|4|IND-335|11
+IND-431|VISUALIZACIÓN DE DATOS|4|IND-325|11
+IND-402|PROYECTO DE DATOS E IO II|5|IND-401|11
+IND-414|INGENIERÍA DE BIG DATA|4|ISW-321|11
+FGC-111|SEMINARIO DE GRADO|3|FGC-103|11
+IND-421|APLICACIONES E INFRAESTRUCTURA DE BIG DATA|4|IND-414|12
+IND-423|MINERÍA DE DATOS|4|ISW-321|12
+IND-432|INTELIGENCIA DE NEGOCIOS|3|IND-413|12
+IND-600|PROYECTO INTEGRADOR DE DATOS E IO: TRABAJO DE GRADO|6|TODAS|12`)) },
+            ciberseguridad: { nombre: 'Ingeniería en Ciberseguridad', creditos: 191, materias: troncoIngenieria.concat(leerPensum(`
+TIC-408|SEGURIDAD DE LA INFORMACIÓN|3|FGC-106|7
+ISW-301|TALLER DE PROGRAMACIÓN I|5|INF-221|7
+INF-437|REDES INFORMÁTICAS|3|INF-222|7
+ISW-321|TALLER DE BASES DE DATOS I|4|INF-221|7
+INR-215|TALLER DE REDES I|4|INF-437|8
+TIC-402|ÉTICA EN TECNOLOGÍA|2|FGC-110|8
+INC-404|ELECTIVA I|3|7MO. CUAT.|8
+INC-222|CIBERDELITOS, CIBERTERRORISMO, CIBERGUERRA|3|TIC-408|8
+INC-231|CRIPTOGRAFÍA Y CRIPTOANÁLISIS|3|TIC-408|9
+INC-315|TALLER SEGURIDAD DE REDES Y TELECOMUNICACIONES|4|INR-215|9
+INC-325|TALLER SEGURIDAD DE SISTEMAS OPERATIVOS Y SOFTWARE|4|INF-222|9
+INC-331|SISTEMA DE GESTIÓN DE LA SEGURIDAD DE LA INFORMACIÓN|3|TIC-408|9
+INC-332|TALLER SEGURIDAD DE BASES DE DATOS|4|ISW-321|9
+INC-411|GESTIÓN DE RIESGOS DE LA SEGURIDAD DE LA INFORMACIÓN|3|INC-331|10
+INC-333|TALLER SEGURIDAD DE INFRAESTRUCTURA FÍSICA, VIRTUAL Y EN LA NUBE|4|INC-315|10
+INC-405|ELECTIVA II|3|9NO. CUAT.|10
+INC-401|PROYECTO DE CIBERSEGURIDAD I|5|INC-331|10
+INC-403|PASANTÍA - PRÁCTICA DE CIBERSEGURIDAD|8|INC-411|10
+INC-412|MARCO LEGAL DE LA SEGURIDAD DE LA INFORMACIÓN|3|INC-331|11
+INC-413|TALLER SEGURIDAD EN DISPOSITIVOS MÓVILES|4|INC-325|11
+INC-402|PROYECTO DE CIBERSEGURIDAD II|5|INC-401|11
+INC-334|INGENIERÍA SOCIAL|3|INC-222|11
+FGC-111|SEMINARIO DE GRADO|3|FGC-103|11
+INC-414|TALLER DE SEGURIDAD IoT Y ENTORNOS INDUSTRIALES|4|INC-333|12
+INC-421|ANÁLISIS FORENSE EN CIBERSEGURIDAD|4|INC-412|12
+INC-422|TALLER DE AUDITORÍA DE SEGURIDAD DE LA INFORMACIÓN|4|INC-331|12
+INC-600|PROYECTO INTEGRADOR DE CIBERSEGURIDAD: TRABAJO DE GRADO|6|TODAS|12`)) },
+            redes: { nombre: 'Ingeniería de Redes y Telecomunicaciones', creditos: 192, materias: troncoIngenieria.concat(leerPensum(`
+TIC-408|SEGURIDAD DE LA INFORMACIÓN|3|FGC-106|7
+INR-211|CIRCUITOS ELÉCTRICOS|4|DMF-210|7
+INF-437|REDES INFORMÁTICAS|3|FGC-106|7
+INR-222|FÍSICA ELÉCTRICA|4|DMF-209|7
+INR-221|ELECTRÓNICA I|4|INR-211|8
+TIC-402|ÉTICA EN TECNOLOGÍA|2|FGC-110|8
+INR-404|ELECTIVA I|3|7MO. CUAT.|8
+INR-215|TALLER DE REDES I|4|INF-437|8
+INR-231|ELECTRÓNICA II|4|INR-221|9
+INR-325|ELECTROMAGNETISMO|4|INR-222|9
+INR-314|TALLER DE DATA CENTER Y SERVIDORES|4|ING-105|9
+INR-333|INGENIERÍA DE TRÁFICO DE REDES|3|MAT-242|9
+INR-225|TALLER DE REDES II|4|INR-215|9
+INR-332|ANTENAS Y PROPAGACIÓN|4|INR-325|10
+INR-235|TALLER DE REDES III|4|INR-225|10
+INR-405|ELECTIVA II|3|9NO. CUAT.|10
+INR-401|PROYECTO DE REDES Y TELECOM I|5|INR-225|10
+INR-403|PASANTÍA - PRÁCTICA DE INGENIERÍA DE REDES Y TELECOM|8|INR-222|10
+INR-331|SISTEMAS DE COMUNICACIÓN I|3|INR-235|11
+INR-315|TALLER DE VOZ SOBRE IP|4|INR-235|11
+INR-402|PROYECTO DE REDES Y TELECOM II|5|INR-401|11
+INR-412|REDES MÓVILES|4|INR-332|11
+FGC-111|SEMINARIO DE GRADO|3|FGC-103|11
+INR-411|SISTEMAS DE COMUNICACIÓN II|3|INR-331|12
+INR-413|REDES CONVERGENTES|4|INR-315|12
+INR-422|REGULACIÓN DEL ESPECTRO RADIOELÉCTRICO|3|INR-412|12
+INR-600|PROYECTO INTEGRADOR DE REDES Y TELECOM: TRABAJO DE GRADO|6|TODAS|12`)) },
+            ti: { nombre: 'Licenciatura en Tecnología de la Información', creditos: 174, materias: leerPensum(`
+FGC-101|ORIENTACIÓN ACADÉMICA INSTITUCIONAL|2|-|1
+FGC-102|MÉTODO DEL TRABAJO ACADÉMICO|2|-|1
+FGC-103|METODOLOGÍA DE LA INVESTIGACIÓN|3|-|1
+ADE-101|ADMINISTRACIÓN I|3|-|1
+FGC-104|LENGUA ESPAÑOLA I|3|FGC-102|2
+FGC-105|MATEMÁTICA BÁSICA I|3|FGC-102|2
+FGC-106|TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN I|3|FGC-102|2
+CON-101|CONTABILIDAD I|3|FGC-102|2
+FGC-107|HISTORIA SOCIAL DOMINICANA|3|FGC-102|3
+FGC-108|INGLÉS I|3|FGC-102|3
+MEC-101|MERCADOTECNIA I|3|ADE-101|3
+TIC-403|TECNOLOGÍA DE LA INFORMACIÓN Y COMUNICACIÓN II|3|FGC-106|3
+FGC-109|FILOSOFÍA|2|FGC-102|4
+FGC-110|DESARROLLO SOSTENIBLE Y GESTIÓN DE RIESGOS|2|FGC-102|4
+ECO-101|ECONOMÍA I|3|FGC-102|4
+MAT-241|ESTADÍSTICA I|3|FGC-105|4
+FGC-116|HISTORIA DEL ARTE|3|FGC-102|4
+MAT-242|ESTADÍSTICA II|3|MAT-241|5
+DMF-209|FÍSICA I|4|FGC-102|5
+INF-111|INGLÉS TÉCNICO I|3|FGC-108|5
+INF-318|ESTRUCTURA DE DATOS|3|FGC-106|5
+FGC-112|EDUCACIÓN CONSTITUCIONAL|3|-|5
+DMF-210|FÍSICA II|4|DMF-209|6
+MTI-200|MATEMÁTICA II|4|FGC-105|6
+INF-221|INTRODUCCIÓN A LA PROGRAMACIÓN|3|FGC-106|6
+INF-106|MATEMÁTICA BINARIA Y CIRCUITOS LÓGICOS|3|TIC-403|6
+INF-222|SISTEMA OPERATIVO I|3|FGC-106|6
+MTI-300|MATEMÁTICA III|4|MTI-200|7
+INF-215|INGENIERÍA ECONÓMICA|3|CON-101|7
+INF-210|ANÁLISIS DE SISTEMAS|3|INF-221|7
+INF-314|LÓGICA DIGITAL|3|INF-106|7
+INF-223|SISTEMA OPERATIVO II|3|INF-222|7
+RSI-344|PROPIEDAD INTELECTUAL|3|FGC-102|8
+TIC-402|ÉTICA EN TECNOLOGÍA|3|FGC-110|8
+INF-208|DISEÑO DE SISTEMAS|3|INF-210|8
+INF-214|PROGRAMACIÓN ESTRUCTURADA|3|INF-221|8
+INF-320|ELECTRÓNICA I|3|DMF-210|8
+ECO-405|FORMULACIÓN DE PROYECTOS|3|ECO-101|9
+INF-104|PROGRAMACIÓN I|3|INF-214|9
+INF-436|BASE DE DATOS|3|INF-208|9
+INF-321|TALLER DE ELECTRÓNICA I|3|INF-320|9
+INF-417|REDES INFORMÁTICAS I|3|INF-222|9
+ECO-404|EVALUACIÓN DE PROYECTOS|3|ECO-405|10
+INF-207|PROGRAMACIÓN II|3|INF-104|10
+TIC-404|COMPUTACIÓN EN LA NUBE|3|INF-223|10
+TIC-440|SEMINARIO DE TECNOLOGÍA|3|TIC-402|10
+INF-418|REDES INFORMÁTICAS II|3|INF-417|10
+TIC-411|CIENCIA DE LOS DATOS E INTELIGENCIA ORGANIZACIONAL|3|INF-436|11
+INF-209|PROGRAMACIÓN III|3|INF-207|11
+TIC-408|SEGURIDAD DE LA INFORMACIÓN|3|INF-418|11
+FGC-111|SEMINARIO DE GRADO|3|FGC-103|11
+TIC-406|GERENCIA DE PROYECTOS TIC|3|ECO-404|11
+INF-212|PROGRAMACIÓN IV|3|INF-209|12
+TIC-409|TALLER DE DATA CENTER Y SERVIDORES|3|INF-418|12
+TIC-410|GESTIÓN ESTRATÉGICA DE TECNOLOGÍA|3|TIC-406|12
+TIC-405|VIRTUALIZACIÓN DE APLICACIONES|3|INF-223|12
+TIC-550|TRABAJO DE GRADO|6|TODAS|12`) }
+        };
+
+        let carreraActual = localStorage.getItem('unicaribe_carrera_actual') || 'software';
+        if (!programasTecnologia[carreraActual]) carreraActual = 'software';
+        let progresoActual = {};
+        const claveProgreso = () => `unicaribe_pensum_progreso_${carreraActual}`;
+        const carrera = () => programasTecnologia[carreraActual];
+        const tieneNota = nota => nota !== null && nota !== undefined && nota !== '' && Number.isFinite(Number(nota));
+        const literal = nota => !tieneNota(nota) ? ['-', '-'] : nota >= 90 ? ['A', '4'] : nota >= 80 ? ['B', '3'] : nota >= 70 ? ['C', '2'] : ['F', '0'];
+
+        function cargarProgresoMulticarrera() {
+            try { progresoActual = JSON.parse(localStorage.getItem(claveProgreso())) || {}; }
+            catch { progresoActual = {}; }
+        }
+        function guardarProgresoMulticarrera() { localStorage.setItem(claveProgreso(), JSON.stringify(progresoActual)); }
+        function estadoMateria(nota, cursando) {
+            if (tieneNota(nota) && Number(nota) >= 70) return '<span class="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-circle-check"></i> Aprobada</span>';
+            if (cursando) return '<span class="bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-spinner animate-spin"></i> Cursando</span>';
+            return '<span class="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-medium px-2 py-0.5 rounded-full">Pendiente</span>';
+        }
+        function renderPensumMulticarrera() {
+            const cuerpo = document.getElementById('table-body');
+            cuerpo.innerHTML = '';
+            let cuatAnterior = 0;
+            carrera().materias.forEach(m => {
+                if (m.cuat !== cuatAnterior) {
+                    cuatAnterior = m.cuat;
+                    cuerpo.insertAdjacentHTML('beforeend', `<tr class="bg-slate-100/80 font-bold text-slate-700 text-xs border-y border-slate-200"><td colspan="9" class="py-2.5 px-4"><span class="text-unicaribe-blue font-extrabold"><i class="fa-solid fa-calendar-week mr-1.5"></i>Cuatrimestre ${m.cuat}</span></td></tr>`);
+                }
+                const datos = progresoActual[m.clave] || { nota: null, cursando: false };
+                const [letra, puntos] = literal(datos.nota);
+                const valor = tieneNota(datos.nota) ? datos.nota : '';
+                cuerpo.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50/50 transition-colors"><td class="py-3 px-4 text-center font-mono text-xs font-bold text-slate-400">${m.clave}</td><td class="py-3 px-4 text-xs font-semibold text-slate-700">${m.nombre}</td><td class="py-3 px-4 text-center text-xs font-bold text-slate-500">${m.cr}</td><td class="py-3 px-4 text-center text-xs font-medium text-slate-400">${m.prereq}</td><td class="py-2 px-4 text-center"><input data-clave="${m.clave}" type="number" value="${valor}" min="0" max="100" placeholder="--" class="nota-input w-16 px-2 py-1 text-center text-xs font-bold border border-slate-200 rounded-lg"></td><td class="py-3 px-4 text-center text-xs font-black">${letra}</td><td class="py-3 px-4 text-center text-xs font-semibold text-slate-400">${puntos}</td><td class="py-2 px-4 text-center"><div class="flex justify-center items-center gap-2">${estadoMateria(datos.nota, datos.cursando)}<button data-cursando="${m.clave}" class="text-slate-400 hover:text-amber-500" title="Marcar como cursando"><i class="fa-solid ${datos.cursando ? 'fa-toggle-on text-amber-500' : 'fa-toggle-off'}"></i></button></div></td><td class="py-3 px-4 text-center"><button data-limpiar="${m.clave}" class="text-slate-300 hover:text-red-500" title="Borrar nota"><i class="fa-regular fa-trash-can"></i></button></td></tr>`);
+            });
+            cuerpo.querySelectorAll('.nota-input').forEach(input => input.addEventListener('change', e => {
+                const clave = e.target.dataset.clave, valor = e.target.value;
+                progresoActual[clave] = { ...(progresoActual[clave] || {}), nota: valor === '' ? null : Math.max(0, Math.min(100, Number(valor))), cursando: false };
+                guardarProgresoMulticarrera(); actualizarMulticarrera();
+            }));
+            cuerpo.querySelectorAll('[data-cursando]').forEach(boton => boton.addEventListener('click', () => {
+                const clave = boton.dataset.cursando, datos = progresoActual[clave] || { nota: null, cursando: false };
+                if (!(tieneNota(datos.nota) && datos.nota >= 70)) progresoActual[clave] = { ...datos, cursando: !datos.cursando };
+                guardarProgresoMulticarrera(); actualizarMulticarrera();
+            }));
+            cuerpo.querySelectorAll('[data-limpiar]').forEach(boton => boton.addEventListener('click', () => { delete progresoActual[boton.dataset.limpiar]; guardarProgresoMulticarrera(); actualizarMulticarrera(); }));
+        }
+        function calcularMulticarrera() {
+            let aprobados = 0, intentados = 0, puntos = 0, suma = 0, activas = 0, tomadas = 0;
+            carrera().materias.forEach(m => {
+                const d = progresoActual[m.clave] || {};
+                if (tieneNota(d.nota)) { const n = Number(d.nota); intentados += m.cr; suma += n * m.cr; tomadas++; if (n >= 90) puntos += 4*m.cr; else if (n >= 80) puntos += 3*m.cr; else if (n >= 70) puntos += 2*m.cr; if (n >= 70) aprobados += m.cr; }
+                else if (d.cursando) activas++;
+            });
+            const indice = intentados ? puntos / intentados : 0, promedio = intentados ? suma / intentados : 0, total = carrera().creditos, porcentaje = Math.round(aprobados / total * 100);
+            document.getElementById('gpa-score').textContent = indice.toFixed(2);
+            document.getElementById('gpa-literal').textContent = indice >= 3.8 ? 'Suma Cum Laude' : indice >= 3.5 ? 'Magna Cum Laude' : indice >= 3.2 ? 'Cum Laude' : indice ? 'Regular' : 'Sin índice';
+            document.getElementById('average-score').textContent = `${promedio.toFixed(1)}%`;
+            document.getElementById('stat-credits').textContent = aprobados;
+            document.querySelector('#stat-credits + span').textContent = `/ ${total}`;
+            document.getElementById('stat-pct').textContent = `${porcentaje}%`;
+            document.getElementById('stat-progress-bar').style.width = `${porcentaje}%`;
+            document.getElementById('stat-taken-count').textContent = `${tomadas} / ${carrera().materias.length}`;
+            document.getElementById('stat-pending').textContent = `${carrera().materias.length - tomadas} materias`;
+            document.getElementById('stat-active').textContent = activas;
+            document.getElementById('stat-js-pct').textContent = `${porcentaje}%`;
+            document.querySelector('#stat-js-pct').closest('.bg-gradient-to-br').querySelector('p').textContent = 'Progreso de carrera';
+        }
+        function actualizarMulticarrera() { renderPensumMulticarrera(); calcularMulticarrera(); }
+        function seleccionarCarrera(id) { carreraActual = id; localStorage.setItem('unicaribe_carrera_actual', id); cargarProgresoMulticarrera(); document.getElementById('nombre-carrera').textContent = `${carrera().nombre} • UNICARIBE`; actualizarMulticarrera(); }
+        function iniciarMulticarrera() {
+            const titulo = document.querySelector('header h1');
+            titulo.insertAdjacentHTML('afterend', '<select id="selector-carrera" class="mt-2 w-full max-w-md rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-xs font-semibold text-white focus:outline-none"><option value="software">Ingeniería de Software</option><option value="datos">Ingeniería de Datos e Inteligencia Organizacional</option><option value="ciberseguridad">Ingeniería en Ciberseguridad</option><option value="redes">Ingeniería de Redes y Telecomunicaciones</option><option value="ti">Licenciatura en Tecnología de la Información</option></select>');
+            document.querySelector('header p.text-blue-200').id = 'nombre-carrera';
+            const selector = document.getElementById('selector-carrera'); selector.value = carreraActual; selector.addEventListener('change', e => seleccionarCarrera(e.target.value));
+            document.getElementById('nombre-carrera').textContent = `${carrera().nombre} • UNICARIBE`;
+            const botonTema = document.getElementById('btn-dark-mode');
+            botonTema.className = 'w-9 h-9 shrink-0 bg-white/10 hover:bg-white/20 text-white rounded-lg transition flex items-center justify-center border border-white/10';
+            botonTema.setAttribute('type', 'button');
+            botonTema.setAttribute('title', 'Cambiar tema');
+            document.querySelector('header .flex.gap-2').prepend(botonTema);
+            const aplicarTema = oscuro => {
+                document.documentElement.classList.toggle('dark', oscuro);
+                botonTema.innerHTML = oscuro ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+                botonTema.setAttribute('aria-label', oscuro ? 'Activar modo claro' : 'Activar modo oscuro');
+                botonTema.setAttribute('aria-pressed', String(oscuro));
+                localStorage.setItem('tema_simulador', oscuro ? 'dark' : 'light');
+            };
+            aplicarTema(localStorage.getItem('tema_simulador') === 'dark');
+            botonTema.addEventListener('click', () => aplicarTema(!document.documentElement.classList.contains('dark')));
+            cargarProgresoMulticarrera(); actualizarMulticarrera();
+        }
+        window.onload = iniciarMulticarrera;
+        window.searchSubject = () => {
+            const q = document.getElementById('search-input').value.toLowerCase().trim();
+            document.querySelectorAll('#table-body tr').forEach(fila => { fila.style.display = !q || fila.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+        };
+        window.resetData = () => { if (confirm(`¿Vaciar el progreso de ${carrera().nombre}?`)) { localStorage.removeItem(claveProgreso()); cargarProgresoMulticarrera(); actualizarMulticarrera(); } };
+        window.exportData = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({ carrera: carreraActual, progreso: progresoActual }, null, 2)], { type: 'application/json' })); a.download = `progreso-${carreraActual}.json`; a.click(); URL.revokeObjectURL(a.href); };
+        window.importData = event => { const archivo = event.target.files[0]; if (!archivo) return; const lector = new FileReader(); lector.onload = e => { try { const data = JSON.parse(e.target.result); if (!data || typeof data !== 'object') throw new Error(); if (data.carrera && programasTecnologia[data.carrera]) carreraActual = data.carrera; progresoActual = data.progreso && typeof data.progreso === 'object' ? data.progreso : data; localStorage.setItem('unicaribe_carrera_actual', carreraActual); guardarProgresoMulticarrera(); document.getElementById('selector-carrera').value = carreraActual; document.getElementById('nombre-carrera').textContent = `${carrera().nombre} • UNICARIBE`; actualizarMulticarrera(); } catch { alert('El archivo no tiene un formato de progreso válido.'); } }; lector.readAsText(archivo); event.target.value = ''; };
     </script>
 </body>
 </html>
